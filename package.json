@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Olawill/tinyapp/issues"
   },
-  "homepage": "https://github.com/Olawill/tinyapp#readme"
+  "homepage": "https://github.com/Olawill/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
