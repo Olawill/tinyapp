@@ -1,5 +1,9 @@
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const app = express();
+
+// Allow the app to use cookie parser
+app.use(cookieParser());
 
 const PORT = 8080; // default port 8080
 
