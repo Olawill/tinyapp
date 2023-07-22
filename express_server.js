@@ -92,6 +92,12 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// Ednpoint for user logout
+app.post("/logout", (req, res) => {
+  // Clear the cookie
+  res.clearCookie("username");
+  res.redirect("/urls");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
