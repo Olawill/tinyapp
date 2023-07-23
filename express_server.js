@@ -74,6 +74,14 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+// Registration Page
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_registration", templateVars);
+});
+
 // Handle deleting urls and redirecting back to database
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
