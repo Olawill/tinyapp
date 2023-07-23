@@ -13,9 +13,33 @@ app.set('view engine', 'ejs');
 // To translate or parse the body of post request body
 app.use(express.urlencoded({ extended: true }));
 
+// Database to store database for testting purposes
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+// Database to store users -- for testing purposes
+const users = {
+  "be2716": {
+    id: "be2716",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  "4be271": {
+    id: "4be271",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+// helper function to check if email is alraedy in the database
+const getUserByEmail = (email) => {
+  for (const key in users) {
+    if (users[key].email === email) {
+      return true;
+    }
+  }
 };
 
 // Generate six random alphanumeric characters
@@ -36,8 +60,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
   const templateVars = {
-    username: req.cookies["username"],
+    user: users.userId,
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -45,8 +70,9 @@ app.get("/urls", (req, res) => {
 
 // For user long url to input
 app.get("/urls/new", (req, res) => {
+  const userId = req.cookies["user_id"];
   const templateVars = {
-    username: req.cookies["username"]
+    user: users.userId
   };
   res.render("urls_new", templateVars);
 });
@@ -60,8 +86,10 @@ app.post("/urls", (req, res) => {
 
 // Single URL
 app.get("/urls/:id", (req, res) => {
+  const userId = req.cookies["user_id"];
+
   const templateVars = {
-    username: req.cookies["username"],
+    user: users.userId,
     id: req.params.id,
     longURL: urlDatabase[req.params.id]
   };
@@ -76,10 +104,31 @@ app.get("/u/:id", (req, res) => {
 
 // Registration Page
 app.get("/register", (req, res) => {
-  const templateVars = {
-    username: req.cookies["username"]
+
+  res.render("urls_registration");
+});
+
+// Add data from registration form to users database
+app.post("/register", (req, res) => {
+
+  // Empty email or password during registration
+  if (!req.body ||!req.body.email ||!req.body.password) {
+    res.send('400: Email or password cannot be empty!!');
+  }
+  // Check if email is already present in database
+  if (getUserByEmail(req.body.email)) {
+    res.send('400 Bad Request: Email already in use, try another one!!');
+  }
+  const userId = generateRandomString();
+  users[userId] = {
+    id: userId,
+    email: req.body.email,
+    password: req.body.password
   };
-  res.render("urls_registration", templateVars);
+
+  res.cookie("user_id", userId);
+
+  res.redirect("/urls");
 });
 
 // Handle deleting urls and redirecting back to database
@@ -96,14 +145,16 @@ app.post("/urls/:id", (req, res) => {
 
 // Endpoint for user login
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  // res.cookie("user_id", req.body.username);
+  res.cookie("user_id", req.cookie["user_id"]);
   res.redirect("/urls");
 });
 
-// Ednpoint for user logout
+// Endpoint for user logout
 app.post("/logout", (req, res) => {
   // Clear the cookie
-  res.clearCookie("username");
+  // res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
