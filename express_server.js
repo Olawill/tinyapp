@@ -68,7 +68,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// For user long url to input
+// For Users t0 create new short url
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
   if (!userId) {
@@ -80,11 +80,18 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// Handle form submission
+// New URL creation from 
 app.post("/urls", (req, res) => {
-  const id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
-  res.redirect(`/urls/${id}`);
+  const userId = req.cookies["user_id"];
+
+  if (!userId) {
+    res.send("Sorry, you cannot shorten URLs since you are not logged in/registered!\n")
+  }
+  else {
+    const id = generateRandomString();
+    urlDatabase[id] = req.body.longURL;
+    res.redirect(`/urls/${id}`);
+  }
 });
 
 // Single URL
