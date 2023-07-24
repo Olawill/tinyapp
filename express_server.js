@@ -107,7 +107,12 @@ app.get("/u/:id", (req, res) => {
 
 // Registration Page
 app.get("/register", (req, res) => {
-  const templateVars = {user: undefined};
+  const templateVars = {user: users[req.cookies["user_id"]]};
+
+  // Check if user is logged in: User_id cookie would be set
+  if (templateVars) {
+    res.redirect("/urls");
+  }
   res.render("urls_registration", templateVars);
 });
 
@@ -153,7 +158,12 @@ app.post("/urls/:id", (req, res) => {
  */
 // User login page rendering
 app.get("/login", (req, res) => {
-  const templateVars = {user: undefined};
+  const templateVars = {user: users[req.cookies["user_id"]]};
+
+  // Check if user is logged in: User_id cookie would be set
+  if (templateVars) {
+    res.redirect("/urls");
+  }
   res.render("urls_login", templateVars);
 });
 
