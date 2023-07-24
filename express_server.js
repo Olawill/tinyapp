@@ -112,7 +112,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
 
   // Empty email or password during registration
-  if (!req.body ||!req.body.email ||!req.body.password) {
+  if (!req.body || !req.body.email || !req.body.password) {
     res.send('400: Email or password cannot be empty!!');
   }
   // Check if email is already present in database
@@ -141,6 +141,12 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] =  req.body.newURL;
   res.redirect("/urls");
+});
+
+// User login page rendering
+app.get("/login", (req, res) => {
+  const templateVars = {user: undefined};
+  res.render("urls_login", templateVars);
 });
 
 // Endpoint for user login
