@@ -18,14 +18,14 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
       <% if (user) { %>
-        <div class="card-text">Logged in as: <%= user.email %></div>
-        <form class="form-inline" method="POST" action="/logout">
+        <div class="card-text" style="margin: auto 0 auto auto">Logged in as: <%= user.email %></div>
+        <form class="form-inline" method="POST" action="/logout" style="margin: auto 0 auto 1em;">
           <div class="form-group mb-2">
             <button type="submit" class="btn btn-primary">Logout</button>
           </div>
         </form>
       <% } else { %>
-        <div class="navbar-nav">
+        <div class="navbar-nav" style="margin: auto 0 auto auto">
           <a class="nav-item nav-link" href="/login">Login</a>
           <a class="nav-item nav-link" href="/register">Register</a>
         </div>
