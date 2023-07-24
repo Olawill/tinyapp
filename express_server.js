@@ -62,7 +62,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
   const templateVars = {
-    user: users.userId,
+    user: users[userId],
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -72,7 +72,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
   const templateVars = {
-    user: users.userId
+    user: users[userId]
   };
   res.render("urls_new", templateVars);
 });
@@ -89,7 +89,7 @@ app.get("/urls/:id", (req, res) => {
   const userId = req.cookies["user_id"];
 
   const templateVars = {
-    user: users.userId,
+    user: users[userId],
     id: req.params.id,
     longURL: urlDatabase[req.params.id]
   };
@@ -104,8 +104,8 @@ app.get("/u/:id", (req, res) => {
 
 // Registration Page
 app.get("/register", (req, res) => {
-
-  res.render("urls_registration");
+  const templateVars = {user: undefined};
+  res.render("urls_registration", templateVars);
 });
 
 // Add data from registration form to users database
