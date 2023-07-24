@@ -33,11 +33,11 @@ const users = {
   },
 };
 
-// helper function to check if email is alraedy in the database
+// helper function to check if email is already in the database
 const getUserByEmail = (email) => {
   for (const key in users) {
     if (users[key].email === email) {
-      return true;
+      return users[key];
     }
   }
 };
@@ -143,6 +143,11 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
+/**
+ * LOGIN PAGE RENDERING
+ * GET route for rendering the page
+ * POST route for handling user information
+ */
 // User login page rendering
 app.get("/login", (req, res) => {
   const templateVars = {user: undefined};
@@ -151,19 +156,41 @@ app.get("/login", (req, res) => {
 
 // Endpoint for user login
 app.post("/login", (req, res) => {
-  // res.cookie("user_id", req.body.username);
-  res.cookie("user_id", req.cookie["user_id"]);
-  res.redirect("/urls");
+  // Extract the user info
+  const userInfo = getUserByEmail(req.body.email);
+  
+  // Check if the email in the login form is present in the database
+  if (!userInfo) {
+    res.send('403 Forbidden!');
+  }
+
+  // If emeil is found
+  if (userInfo) {
+    // Check if the password provided matches the one stored in database
+    if (userInfo.password === req.body.password) {
+      res.cookie("user_id", userInfo.id);
+      res.redirect("/urls");
+    }
+    res.send("403 Forbidden!!!");
+  }
+ 
 });
 
-// Endpoint for user logout
+/**
+ * LOGOUT BUTTON
+ * Use only when the user id is present on page
+ * Endpoint for user logout
+*/
 app.post("/logout", (req, res) => {
+
   // Clear the cookie
-  // res.clearCookie("username");
   res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
+/**
+ * App listening os the specified port
+ */
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
