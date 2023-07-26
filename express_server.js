@@ -18,8 +18,38 @@ app.use(express.urlencoded({ extended: true }));
 
 // Database to store database for testting purposes
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "be2716"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "be2716"
+  },
+  "auz1zf": {
+    longURL: "https://www.caresmedicalclinic.com/",
+    userID: "4be271"
+  },
+  "g8qxjm": {
+    longURL: "https://www.facebook.com/",
+    userID: "3oq0pt"
+  },
+  "z3yknf": {
+    longURL: "https://medium.com/",
+    userID: "4be271"
+  },
+  "koelxw": {
+    longURL: "https://stackoverflow.com/",
+    userID: "4be271"
+  },
+  "nqhcjc": {
+    longURL: "https://github.com/jamesgeorge007",
+    userID: "be2716"
+  },
+  "5iy25p": {
+    longURL: "https://github.com/Olawill",
+    userID: "3oq0pt"
+  }
 };
 
 // Database to store users -- for testing purposes
@@ -34,7 +64,16 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
+  "3oq0pt": {
+    id: "3oq0pt",
+    email: "teedee@example.com",
+    password: "4x6levsfifv",
+  },
 };
+
+// Creata an object (table in the database) to track how 
+// often the short url link was visited via /u/id
+const visits = [];
 
 // helper function to check if email is already in the database
 const getUserByEmail = (email) => {
@@ -65,6 +104,8 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
   const templateVars = {
+    // To track the date the short url was created
+    date: new Date().toLocaleDateString('en-CA'),
     user: users[userId],
     urls: urlDatabase
   };
@@ -90,7 +131,7 @@ app.post("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
 
   if (!userId) {
-    return res.status(400).send("Sorry, you cannot shorten URLs since you are not logged in/registered!\n");
+    return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
   }
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
@@ -115,9 +156,13 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
 
   if (longURL) {
+    // visits.push({
+    //   userId: req.params.id,
+    //   visit: count + 1
+    // });
     return res.redirect(longURL);
   }
-  res.status(403).send("<b>Url does not exist or has moved!!!</b>");
+  res.status(403).send("<b>Url does not exist or has moved!!!</b>\n");
 });
 
 // Registration Page
