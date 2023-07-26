@@ -1,9 +1,12 @@
 const express = require("express");
+const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const app = express();
 
 // Allow the app to use cookie parser
 app.use(cookieParser());
+
+app.use(morgan('dev'));
 
 const PORT = 8080; // default port 8080
 
@@ -68,33 +71,33 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// For Users t0 create new short url
+// For Users to create new short url
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
   if (!userId) {
-    res.redirect("/login")
+    return res.redirect("/login");
   }
+
   const templateVars = {
     user: users[userId]
   };
   res.render("urls_new", templateVars);
+
 });
 
-// New URL creation from 
+// Endpoint for URL shortening
 app.post("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
 
   if (!userId) {
-    res.send("Sorry, you cannot shorten URLs since you are not logged in/registered!\n")
+    return res.status(400).send("Sorry, you cannot shorten URLs since you are not logged in/registered!\n");
   }
-  else {
-    const id = generateRandomString();
-    urlDatabase[id] = req.body.longURL;
-    res.redirect(`/urls/${id}`);
-  }
+  const id = generateRandomString();
+  urlDatabase[id] = req.body.longURL;
+  res.redirect(`/urls/${id}`);
 });
 
-// Single URL
+// Single URL - Edit the long urls
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies["user_id"];
 
@@ -108,8 +111,13 @@ app.get("/urls/:id", (req, res) => {
 
 // Redirect request to /u/id to its longurl
 app.get("/u/:id", (req, res) => {
+  
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+
+  if (longURL) {
+    return res.redirect(longURL);
+  }
+  res.status(403).send("<b>Url does not exist or has moved!!!</b>");
 });
 
 // Registration Page
@@ -117,8 +125,8 @@ app.get("/register", (req, res) => {
   const templateVars = {user: users[req.cookies["user_id"]]};
 
   // Check if user is logged in: User_id cookie would be set
-  if (templateVars) {
-    res.redirect("/urls");
+  if (templateVars.user) {
+    return res.redirect("/urls");
   }
   res.render("urls_registration", templateVars);
 });
@@ -128,11 +136,11 @@ app.post("/register", (req, res) => {
 
   // Empty email or password during registration
   if (!req.body || !req.body.email || !req.body.password) {
-    res.send('400: Email or password cannot be empty!!');
+    return res.status(400).send('Email or password cannot be empty!!');
   }
   // Check if email is already present in database
   if (getUserByEmail(req.body.email)) {
-    res.send('400 Bad Request: Email already in use, try another one!!');
+    return res.status(400).send('Email already in use, try another one!!');
   }
   const userId = generateRandomString();
   users[userId] = {
@@ -168,8 +176,8 @@ app.get("/login", (req, res) => {
   const templateVars = {user: users[req.cookies["user_id"]]};
 
   // Check if user is logged in: User_id cookie would be set
-  if (templateVars) {
-    res.redirect("/urls");
+  if (templateVars.user) {
+    return res.redirect("/urls");
   }
   res.render("urls_login", templateVars);
 });
@@ -181,17 +189,17 @@ app.post("/login", (req, res) => {
   
   // Check if the email in the login form is present in the database
   if (!userInfo) {
-    res.send('403 Forbidden!');
+    return res.status(403).send('403 Forbidden!');
   }
 
-  // If emeil is found
+  // If email is found
   if (userInfo) {
     // Check if the password provided matches the one stored in database
     if (userInfo.password === req.body.password) {
       res.cookie("user_id", userInfo.id);
-      res.redirect("/urls");
+      return res.redirect("/urls");
     }
-    res.send("403 Forbidden!!!");
+    res.status(403).send("Email or password is incorrect!!!");
   }
  
 });
