@@ -106,6 +106,7 @@ app.get("/urls", (req, res) => {
   const templateVars = {
     // To track the date the short url was created
     date: new Date().toLocaleDateString('en-CA'),
+
     user: users[userId],
     urls: urlDatabase
   };
@@ -134,7 +135,7 @@ app.post("/urls", (req, res) => {
     return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
   }
   const id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id] = {longURL: req.body.longURL, userID: userId};
   res.redirect(`/urls/${id}`);
 });
 
@@ -145,7 +146,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     user: users[userId],
     id: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    longURL: urlDatabase[req.params.id].longURL
   };
   res.render("urls_show", templateVars);
 });
@@ -153,7 +154,7 @@ app.get("/urls/:id", (req, res) => {
 // Redirect request to /u/id to its longurl
 app.get("/u/:id", (req, res) => {
   
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
 
   if (longURL) {
     // visits.push({
@@ -207,7 +208,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // Handle editing urls and redirecting back to database
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] =  req.body.newURL;
+  urlDatabase[req.params.id] =  {longURL: req.body.newURL};
   res.redirect("/urls");
 });
 
