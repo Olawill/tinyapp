@@ -159,6 +159,17 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies["user_id"];
 
+  // Check if the user is logged in
+  if (!userId) {
+    return res.status(400).send("<b>Sorry, you can't access page since you are not logged in!</b>\n");
+  }
+
+  // Check if the URL belongs to the user
+  if (urlDatabase[req.params.id].userID !== userId) {
+    return res.status(404).send("<b>Page Not Found</b>\n");
+  }
+  
+
   const templateVars = {
     user: users[userId],
     id: req.params.id,
