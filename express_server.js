@@ -75,6 +75,9 @@ const users = {
 // often the short url link was visited via /u/id
 const visits = [];
 
+/**
+ * HELPER FUNCTIONS
+ */
 // helper function to check if email is already in the database
 const getUserByEmail = (email) => {
   for (const key in users) {
@@ -82,6 +85,18 @@ const getUserByEmail = (email) => {
       return users[key];
     }
   }
+};
+
+// GET USER URLS FROM DATABASE
+const urlsForUser = (id, urlBase) => {
+  let userURLs = {};
+  
+  for (const urlId in urlBase) {
+    if (urlBase[urlId].userID === id) {
+      userURLs[urlId] = urlBase[urlId];
+    }
+  }
+  return userURLs;
 };
 
 // Generate six random alphanumeric characters
@@ -103,12 +118,13 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
+
   const templateVars = {
     // To track the date the short url was created
     date: new Date().toLocaleDateString('en-CA'),
 
     user: users[userId],
-    urls: urlDatabase
+    urls: urlsForUser(userId, urlDatabase)
   };
   res.render("urls_index", templateVars);
 });
