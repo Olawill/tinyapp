@@ -19,41 +19,48 @@
 <body>
   <%- include('partials/_header') %>
   <main style="margin: 1em;">
-    <h3>My URLs</h3>
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Created On</th>
-          <th scope="col">Short URL ID</th>
-          <th scope="col">Long URL</th>
-          <th scope="col">Edit</th>
-          <th scope="col">Delete</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% for (let id in urls) { %>
+    <% if (user) { %>
+      <h3>My URLs</h3>
+      <table class="table">
+        <thead>
           <tr>
-            <td><%= date %></td>
-            <td><%= id %></td>
-            <td><%= urls[id].longURL %></td>
-            <td>
-              <form class="form-inline" method="GET" action="/urls/<%= id %>">
-                <div class="form-group mb-2">
-                  <button type="submit" class="btn btn-primary">Edit</button>
-                </div>
-              </form>
-            </td>
-            <td>
-              <form class="form-inline" method="POST" action="/urls/<%= id %>/delete">
-                <div class="form-group mb-2">
-                  <button type="submit" class="btn btn-primary">Delete</button>
-                </div>
-              </form>
-            </td>
+            <th scope="col">Created On</th>
+            <th scope="col">Short URL ID</th>
+            <th scope="col">Long URL</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
           </tr>
-        <% } %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% for (let id in urls) { %>
+            <tr>
+              <td><%= date %></td>
+              <td><%= id %></td>
+              <td><%= urls[id].longURL %></td>
+              <td>
+                <form class="form-inline" method="GET" action="/urls/<%= id %>">
+                  <div class="form-group mb-2">
+                    <button type="submit" class="btn btn-primary">Edit</button>
+                  </div>
+                </form>
+              </td>
+              <td>
+                <form class="form-inline" method="POST" action="/urls/<%= id %>/delete">
+                  <div class="form-group mb-2">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div class="text-center">
+        <h3><em>Welcome to this awesome URL Shortening App!!</em></h4>
+        <p>Please <a href="/login">Login</a> or <a href="/register">Register</a> to access the url shortening capability on this website!!!</p>
+      </div>
+    <% } %>
   </main>
   <!-- Bootstrap 35 -->
   <script 
