@@ -9,8 +9,11 @@ TinyApp is a multipage app with:
 
 ## Final Product
 
+### <center>Home Page</center>
 !["Home Page"](/doc/homepage.png)
+### <center>URL Page For Each for User</center>
 !["URL Page for user: user@example.com"](/doc/userURLsPage.png)
+### <center>URL Edit Page</center>
 !["Example Edit Page for Individual URLs created"](/doc/shortURLEditPage.png)
 
 ## Dependencies
@@ -27,4 +30,8 @@ TinyApp is a multipage app with:
 ## Getting Started
 
 - Install all dependencies (using the `npm install` command).
-- Run the development web server using the `node express_server.js` command.
+- To run the app, edit the script in the package.json file to include the filename for the server
+  - `scripts: {
+    start: "./node_modules/.bin/nodemon -L filename"
+  }`
+- Run the development web server using the `node run start` command.

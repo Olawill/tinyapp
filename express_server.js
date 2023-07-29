@@ -91,7 +91,12 @@ const urlDatabase =  visits(urls);
 
 // ================= INITIAL TEST ============================
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const userId = req.session.user_id;
+
+  if (userId) {
+    return res.redirect("/urls");
+  }
+  res.redirect("/login");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -142,6 +147,10 @@ app.get("/urls/new", (req, res) => {
 // GET ROUTE - Edit the long urls
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
+
+  if (!Object.keys(urlDatabase).includes(req.params.id)) {
+    return res.status(400).send("The link does not exist or has expired!!!");
+  }
 
   const templateVars = {
     user: users[userId],
@@ -205,7 +214,7 @@ app.put("/urls/:id", (req, res) => {
 });
 
 // DELETE ROUTE - Handle deleting urls and redirecting back to database
-app.delete("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id", (req, res) => {
   // User ID after logging in
   const userId = req.session.user_id;
 
@@ -231,6 +240,10 @@ app.delete("/urls/:id/delete", (req, res) => {
 
 // REDIRECTION - Access to the long URLs from short URLs
 app.get("/u/:id", (req, res) => {
+
+  if (!Object.keys(urlDatabase).includes(req.params.id)) {
+    return res.status(400).send("The link does not exist or has expired!!!");
+  }
   
   const longURL = urlDatabase[req.params.id].longURL;
   const visitDate = new Date().toLocaleDateString('en-CA');
@@ -246,7 +259,8 @@ app.get("/u/:id", (req, res) => {
         urlDatabase[req.params.id].visit.uniqueVisitorCount++;
         urlDatabase[req.params.id].visit.visitorIDs.push(req.session.user_id);
       }
-    
+    }
+
     if (!req.session.user_id) {
       const userId = generateRandomString();
       req.session.user_id = userId;
@@ -255,7 +269,6 @@ app.get("/u/:id", (req, res) => {
       urlDatabase[req.params.id].visit.visitHistory.push([visitDate, req.session.user_id]);
       urlDatabase[req.params.id].visit.uniqueVisitorCount++;
       urlDatabase[req.params.id].visit.visitorIDs.push(req.session.user_id);
-    }
     }
 
     return res.redirect(longURL);
