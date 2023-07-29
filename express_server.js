@@ -218,12 +218,52 @@ app.post("/register", (req, res) => {
 
 // Handle deleting urls and redirecting back to database
 app.post("/urls/:id/delete", (req, res) => {
+  // Login user ID
+  const userId = req.cookies["user_id"];
+
+  // If the url ID provided does not exist
+  if (userId && !urlDatabase[req.params.id]) {
+
+    return res.status(404).send('Page Not Found!!!\n')
+  }
+
+  // User not logged in
+  if (!userId) {
+    console.log(urlDatabase[req.params.id]);
+    return res.status(403).send('Please login or register to delete this url!!!\n');
+  }
+
+  // Check if user does not own the url
+  if (userId && urlDatabase[req.params.id].userID !== userId) {
+    return res.status(401).send(`You are unauthorized to delete ${req.params.id}\n`);
+  }
+
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
 // Handle editing urls and redirecting back to database
 app.post("/urls/:id", (req, res) => {
+  // Login user ID
+  const userId = req.cookies["user_id"];
+
+  // If the url ID provided does not exist
+  if (userId && !urlDatabase[req.params.id]) {
+
+    return res.status(404).send('Page Not Found!!!\n')
+  }
+
+  // User not logged in
+  if (!userId) {
+    console.log(urlDatabase[req.params.id]);
+    return res.status(403).send('Please login or register to edit this url!!!\n');
+  }
+
+  // Check if user does not own the url
+  if (userId && urlDatabase[req.params.id].userID !== userId) {
+    return res.status(401).send(`You are unauthorized to edit ${req.params.id}\n`);
+  }
+
   urlDatabase[req.params.id] =  {longURL: req.body.newURL};
   res.redirect("/urls");
 });
