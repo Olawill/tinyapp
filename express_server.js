@@ -83,10 +83,10 @@ const visits = [];
  * HELPER FUNCTIONS
  */
 // helper function to check if email is already in the database
-const getUserByEmail = (email) => {
-  for (const key in users) {
-    if (users[key].email === email) {
-      return users[key];
+const getUserByEmail = (email, database) => {
+  for (const key in database) {
+    if (database[key].email === email) {
+      return database[key];
     }
   }
 };
@@ -208,7 +208,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send('Email or password cannot be empty!!');
   }
   // Check if email is already present in database
-  if (getUserByEmail(req.body.email)) {
+  if (getUserByEmail(req.body.email, users)) {
     return res.status(400).send('Email already in use, try another one!!');
   }
   const userId = generateRandomString();
@@ -295,7 +295,7 @@ app.get("/login", (req, res) => {
 // Endpoint for user login
 app.post("/login", (req, res) => {
   // Extract the user info
-  const userInfo = getUserByEmail(req.body.email);
+  const userInfo = getUserByEmail(req.body.email, users);
   
   // Check if the email in the login form is present in the database
   if (!userInfo) {
@@ -324,7 +324,7 @@ app.post("/logout", (req, res) => {
 
   // Clear the cookie
   req.session = null;
-  
+
   res.redirect("/login");
 });
 
