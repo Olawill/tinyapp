@@ -1,11 +1,14 @@
 const express = require("express");
 const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const app = express();
 
-// Allow the app to use cookie parser
-app.use(cookieParser());
+// Allow the app to use cookie session
+app.use(cookieSession({
+  name: "session",
+  keys: ["key1", "key2"],
+}));
 
 app.use(morgan('dev'));
 
@@ -118,7 +121,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 
   const templateVars = {
     // To track the date the short url was created
@@ -132,7 +135,7 @@ app.get("/urls", (req, res) => {
 
 // For Users to create new short url
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     return res.redirect("/login");
   }
@@ -146,7 +149,7 @@ app.get("/urls/new", (req, res) => {
 
 // Endpoint for URL shortening
 app.post("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 
   if (!userId) {
     return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
@@ -158,7 +161,7 @@ app.post("/urls", (req, res) => {
 
 // Single URL - Edit the long urls
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 
   const templateVars = {
     user: users[userId],
@@ -188,7 +191,7 @@ app.get("/u/:id", (req, res) => {
  */
 // Registration Page
 app.get("/register", (req, res) => {
-  const templateVars = {user: users[req.cookies["user_id"]]};
+  const templateVars = {user: users[req.session.user_id]};
 
   // Check if user is logged in: User_id cookie would be set
   if (templateVars.user) {
@@ -216,15 +219,15 @@ app.post("/register", (req, res) => {
   };
 
   // Set the cookie
-  res.cookie("user_id", userId);
+  req.session.user_id = userId;
 
   res.redirect("/urls");
 });
 
 // Handle deleting urls and redirecting back to database
 app.post("/urls/:id/delete", (req, res) => {
-  // Login user ID
-  const userId = req.cookies["user_id"];
+  // User ID after logging in
+  const userId = req.session.user_id;
 
   // If the url ID provided does not exist
   if (userId && !urlDatabase[req.params.id]) {
@@ -250,7 +253,7 @@ app.post("/urls/:id/delete", (req, res) => {
 // Handle editing urls and redirecting back to database
 app.post("/urls/:id", (req, res) => {
   // Login user ID
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 
   // If the url ID provided does not exist
   if (userId && !urlDatabase[req.params.id]) {
@@ -260,7 +263,7 @@ app.post("/urls/:id", (req, res) => {
 
   // User not logged in
   if (!userId) {
-    console.log(urlDatabase[req.params.id]);
+
     return res.status(403).send('Please login or register to edit this url!!!\n');
   }
 
@@ -280,7 +283,7 @@ app.post("/urls/:id", (req, res) => {
  */
 // User login page rendering
 app.get("/login", (req, res) => {
-  const templateVars = {user: users[req.cookies["user_id"]]};
+  const templateVars = {user: users[req.session.user_id]};
 
   // Check if user is logged in: User_id cookie would be set
   if (templateVars.user) {
@@ -304,7 +307,7 @@ app.post("/login", (req, res) => {
 
     // Check if the password provided matches the one stored in database
     if (bcrypt.compareSync(req.body.password, userInfo.password)) {
-      res.cookie("user_id", userInfo.id);
+      req.session.user_id = userInfo.id;
       return res.redirect("/urls");
     }
     res.status(400).send("Email or password is incorrect!!!");
@@ -320,7 +323,8 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
 
   // Clear the cookie
-  res.clearCookie("user_id");
+  req.session = null;
+  
   res.redirect("/login");
 });
 
