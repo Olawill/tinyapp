@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
+const getUserByEmail = require("./helpers");
 const app = express();
 
 // Allow the app to use cookie session
@@ -83,13 +84,6 @@ const visits = [];
  * HELPER FUNCTIONS
  */
 // helper function to check if email is already in the database
-const getUserByEmail = (email, database) => {
-  for (const key in database) {
-    if (database[key].email === email) {
-      return database[key];
-    }
-  }
-};
 
 // GET USER URLS FROM DATABASE
 const urlsForUser = (id, urlBase) => {
@@ -107,6 +101,7 @@ const urlsForUser = (id, urlBase) => {
 const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
 };
+// ===========================================================
 
 app.get("/", (req, res) => {
   res.send("Hello!");
