@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 const app = express();
 
 // Allow the app to use cookie parser
@@ -57,17 +58,17 @@ const users = {
   "be2716": {
     id: "be2716",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "$2a$10$vD4RzjjoTwHUTeEhTPA4He7MEoZeGnOaRHhOBB8DTF6S4ZCE1ioZK" // "purple-monkey-dinosaur",
   },
   "4be271": {
     id: "4be271",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: "$2a$10$hd9R0NL7KmTx.suRKqMlTuM/FxkVeq2JU56fE2bA4oP1A/NSB0KvG" // "dishwasher-funk",
   },
   "3oq0pt": {
     id: "3oq0pt",
     email: "teedee@example.com",
-    password: "4x6levsfifv",
+    password: "$2a$10$yXB9h.vbwAKegJR0wp6MSejfI7Ys5Pmdg5jTTJETMDhi9K68Pgbae" // "4x6levsfifv",
   },
 };
 
@@ -182,6 +183,9 @@ app.get("/u/:id", (req, res) => {
   res.status(403).send("<b>Url does not exist or has moved!!!</b>\n");
 });
 
+/**
+ * REGISTRATION ENDPOINT
+ */
 // Registration Page
 app.get("/register", (req, res) => {
   const templateVars = {user: users[req.cookies["user_id"]]};
@@ -208,9 +212,10 @@ app.post("/register", (req, res) => {
   users[userId] = {
     id: userId,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   };
 
+  // Set the cookie
   res.cookie("user_id", userId);
 
   res.redirect("/urls");
@@ -296,12 +301,13 @@ app.post("/login", (req, res) => {
 
   // If email is found
   if (userInfo) {
+
     // Check if the password provided matches the one stored in database
-    if (userInfo.password === req.body.password) {
+    if (bcrypt.compareSync(req.body.password, userInfo.password)) {
       res.cookie("user_id", userInfo.id);
       return res.redirect("/urls");
     }
-    res.status(403).send("Email or password is incorrect!!!");
+    res.status(400).send("Email or password is incorrect!!!");
   }
  
 });
