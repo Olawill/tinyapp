@@ -21,6 +21,15 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
+        <p class="card-text">
+          Last Visited: <%= longURLInfo.visit.lastVisitTime %>
+        </p>
+        <p class="card-text">
+          Total Visit: <%= longURLInfo.visit.visitorCount %>
+        </p>
+        <p class="card-text">
+          Unique Visits: <%= longURLInfo.visit.uniqueVisitorCount %>
+        </p>
       </div>
 
       <div class="card-footer text-muted">

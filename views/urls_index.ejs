@@ -27,6 +27,8 @@
             <th scope="col">Created On</th>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Total Visits</th>
+            <th scope="col">Unique Visits</th>
             <th scope="col">Edit</th>
             <th scope="col">Delete</th>
           </tr>
@@ -37,6 +39,8 @@
               <td><%= date %></td>
               <td><%= id %></td>
               <td><%= urls[id].longURL %></td>
+              <td><%= urls[id].visit.visitorCount %></td>
+              <td><%= urls[id].visit.uniqueVisitorCount %></td>
               <td>
                 <form class="form-inline" method="GET" action="/urls/<%= id %>">
                   <div class="form-group mb-2">

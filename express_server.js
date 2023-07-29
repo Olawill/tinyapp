@@ -3,13 +3,14 @@ const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const methodOverride = require("method-override");
-const { getUserByEmail } = require("./helpers");
+const { getUserByEmail, urlsForUser, generateRandomString, visits, addVisit } = require("./helpers");
 const app = express();
 
 // Allow the app to use cookie session
 app.use(cookieSession({
   name: "session",
   keys: ["key1", "key2"],
+  maxAge: 1 * 10 * 60 * 1000,
 }));
 
 // Method Override
@@ -19,6 +20,9 @@ app.use(morgan('dev'));
 
 const PORT = 8080; // default port 8080
 
+const HASH_SALT = 10;
+const salt = bcrypt.genSaltSync(HASH_SALT);
+
 // Set View Engine to EJS
 app.set('view engine', 'ejs');
 
@@ -26,7 +30,7 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 
 // Database to store database for testting purposes
-const urlDatabase = {
+const urls = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
     userID: "be2716"
@@ -66,45 +70,23 @@ const users = {
   "be2716": {
     id: "be2716",
     email: "user@example.com",
-    password: "$2a$10$vD4RzjjoTwHUTeEhTPA4He7MEoZeGnOaRHhOBB8DTF6S4ZCE1ioZK" // "purple-monkey-dinosaur",
+    password: "$2a$10$61ovY/ZiL8WS1TwTYrHJoulHhsqKM62pjDgISh7bQXYSzPybbS4xi" // "purple-monkey-dinosaur",
   },
   "4be271": {
     id: "4be271",
     email: "user2@example.com",
-    password: "$2a$10$hd9R0NL7KmTx.suRKqMlTuM/FxkVeq2JU56fE2bA4oP1A/NSB0KvG" // "dishwasher-funk",
+    password: "$2a$10$61ovY/ZiL8WS1TwTYrHJourqYOfIHb.CMPKK8f/3Ec/iVjdW.pRey" // "dishwasher-funk",
   },
   "3oq0pt": {
     id: "3oq0pt",
     email: "teedee@example.com",
-    password: "$2a$10$yXB9h.vbwAKegJR0wp6MSejfI7Ys5Pmdg5jTTJETMDhi9K68Pgbae" // "4x6levsfifv",
+    password: "$2a$10$61ovY/ZiL8WS1TwTYrHJouv4pOVQJ7Cr4FUC2L7/Z6Q3UI/u53e2K" // "4x6levsfifv",
   },
 };
 
-// Creata an object (table in the database) to track how 
-// often the short url link was visited via /u/id
-const visits = [];
+// Modify the URL database to track visitors and visits
+const urlDatabase =  visits(urls);
 
-/**
- * HELPER FUNCTIONS
- */
-// helper function to check if email is already in the database
-
-// GET USER URLS FROM DATABASE
-const urlsForUser = (id, urlBase) => {
-  let userURLs = {};
-  
-  for (const urlId in urlBase) {
-    if (urlBase[urlId].userID === id) {
-      userURLs[urlId] = urlBase[urlId];
-    }
-  }
-  return userURLs;
-};
-
-// Generate six random alphanumeric characters
-const generateRandomString = () => {
-  return Math.random().toString(36).substring(2, 8);
-};
 // ===========================================================
 
 // ================= INITIAL TEST ============================
@@ -126,6 +108,7 @@ app.get("/hello", (req, res) => {
  * URL PAGE ENDPOINT
  * All URLs for the user
  */
+
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
 
@@ -156,24 +139,6 @@ app.get("/urls/new", (req, res) => {
 
 });
 
-// Endpoint for URL shortening
-app.post("/urls", (req, res) => {
-  const userId = req.session.user_id;
-
-  if (!userId) {
-    return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
-  }
-  const id = generateRandomString();
-  urlDatabase[id] = {longURL: req.body.longURL, userID: userId};
-  res.redirect(`/urls/${id}`);
-});
-
-// ===========================================================
-
-/**
- * MODIFY EXISTING URLs
-*/
-
 // GET ROUTE - Edit the long urls
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
@@ -183,8 +148,34 @@ app.get("/urls/:id", (req, res) => {
     id: req.params.id,
     longURLInfo: urlDatabase[req.params.id]
   };
+
   res.render("urls_show", templateVars);
 });
+
+// Endpoint for URL shortening
+app.post("/urls", (req, res) => {
+  const userId = req.session.user_id;
+
+  if (!userId) {
+    return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
+  }
+  const id = generateRandomString();
+
+  urlDatabase[id] = {
+    longURL: req.body.longURL,
+    userID: userId
+  };
+  // Add the visitor tracking object
+  addVisit(id, urlDatabase);
+
+  res.redirect(`/urls/${id}`);
+});
+
+// ===========================================================
+
+/**
+ * MODIFY EXISTING URLs
+*/
 
 // POST ROUTE - Handle editing urls and redirecting back to database
 app.put("/urls/:id", (req, res) => {
@@ -208,7 +199,8 @@ app.put("/urls/:id", (req, res) => {
     return res.status(401).send(`You are unauthorized to edit ${req.params.id}\n`);
   }
 
-  urlDatabase[req.params.id] =  {longURL: req.body.newURL, userID: userId};
+  urlDatabase[req.params.id].longURL = req.body.newURL;
+  urlDatabase[req.params.id].userID = userId;
   res.redirect("/urls");
 });
 
@@ -225,7 +217,6 @@ app.delete("/urls/:id/delete", (req, res) => {
 
   // User not logged in
   if (!userId) {
-    console.log(urlDatabase[req.params.id]);
     return res.status(403).send('Please login or register to delete this url!!!\n');
   }
 
@@ -242,15 +233,34 @@ app.delete("/urls/:id/delete", (req, res) => {
 app.get("/u/:id", (req, res) => {
   
   const longURL = urlDatabase[req.params.id].longURL;
+  const visitDate = new Date().toLocaleDateString('en-CA');
 
   if (longURL) {
-    // visits.push({
-    //   userId: req.params.id,
-    //   visit: count + 1
-    // });
+    // Check if cookie is set
+    if (req.session.user_id) {
+      urlDatabase[req.params.id].visit.visitorCount++;
+      urlDatabase[req.params.id].visit.visitHistory.push([visitDate, req.session.user_id]);
+
+      // Check if user already used the link
+      if (!urlDatabase[req.params.id].visit.visitorIDs.includes(req.session.user_id)) {
+        urlDatabase[req.params.id].visit.uniqueVisitorCount++;
+        urlDatabase[req.params.id].visit.visitorIDs.push(req.session.user_id);
+      }
+    
+    if (!req.session.user_id) {
+      const userId = generateRandomString();
+      req.session.user_id = userId;
+
+      urlDatabase[req.params.id].visit.visitorCount++;
+      urlDatabase[req.params.id].visit.visitHistory.push([visitDate, req.session.user_id]);
+      urlDatabase[req.params.id].visit.uniqueVisitorCount++;
+      urlDatabase[req.params.id].visit.visitorIDs.push(req.session.user_id);
+    }
+    }
+
     return res.redirect(longURL);
   }
-  res.status(403).send("<b>Url does not exist or has moved!!!</b>\n");
+  res.status(404).send("<b>Url does not exist or has moved!!!</b>\n");
 });
 
 /**
@@ -279,10 +289,11 @@ app.post("/register", (req, res) => {
     return res.status(400).send('Email already in use, try another one!!');
   }
   const userId = generateRandomString();
+  
   users[userId] = {
     id: userId,
     email: req.body.email,
-    password: bcrypt.hashSync(req.body.password, 10)
+    password: bcrypt.hashSync(req.body.password, salt)
   };
 
   // Set the cookie
