@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
+const methodOverride = require("method-override");
 const { getUserByEmail } = require("./helpers");
 const app = express();
 
@@ -10,6 +11,9 @@ app.use(cookieSession({
   name: "session",
   keys: ["key1", "key2"],
 }));
+
+// Method Override
+app.use(methodOverride('_method'));
 
 app.use(morgan('dev'));
 
@@ -135,20 +139,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// Endpoint for URL shortening
-app.post("/urls", (req, res) => {
-  const userId = req.session.user_id;
-
-  if (!userId) {
-    return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
-  }
-  const id = generateRandomString();
-  urlDatabase[id] = {longURL: req.body.longURL, userID: userId};
-  res.redirect(`/urls/${id}`);
-});
-
-// ===========================================================
-
 /**
  * CREATE NEW SHORT URLs
  * For Users to create new short url
@@ -165,6 +155,20 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 
 });
+
+// Endpoint for URL shortening
+app.post("/urls", (req, res) => {
+  const userId = req.session.user_id;
+
+  if (!userId) {
+    return res.status(400).send("<b>Sorry, you cannot shorten URLs since you are not logged in/registered!</b>\n");
+  }
+  const id = generateRandomString();
+  urlDatabase[id] = {longURL: req.body.longURL, userID: userId};
+  res.redirect(`/urls/${id}`);
+});
+
+// ===========================================================
 
 /**
  * MODIFY EXISTING URLs
@@ -183,7 +187,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 // POST ROUTE - Handle editing urls and redirecting back to database
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   // Login user ID
   const userId = req.session.user_id;
 
@@ -204,12 +208,12 @@ app.post("/urls/:id", (req, res) => {
     return res.status(401).send(`You are unauthorized to edit ${req.params.id}\n`);
   }
 
-  urlDatabase[req.params.id] =  {longURL: req.body.newURL};
+  urlDatabase[req.params.id] =  {longURL: req.body.newURL, userID: userId};
   res.redirect("/urls");
 });
 
 // DELETE ROUTE - Handle deleting urls and redirecting back to database
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id/delete", (req, res) => {
   // User ID after logging in
   const userId = req.session.user_id;
 
